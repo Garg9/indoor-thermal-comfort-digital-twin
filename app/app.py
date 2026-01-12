@@ -1,8 +1,12 @@
+import os
+import sys
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
 import streamlit as st
 import pandas as pd
 # import joblib
 import matplotlib.pyplot as plt
-import os
 from src.data_loader import load_raw_data
 from src.preprocessing import preprocess_data
 from src.model_training import train_models
@@ -269,5 +273,6 @@ st.divider()
 st.caption(
     "Final Year Project | AI-Driven Indoor Thermal Comfort Prediction using Digital Twin Concepts"
 )
+
 
 
