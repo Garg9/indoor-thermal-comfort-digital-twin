@@ -19,6 +19,15 @@ def load_and_train_model():
     model = train_models(X, y)
     return model
 
+st.subheader("🔍 Training Data Distribution (Debug)")
+
+import pandas as pd
+df_debug = load_raw_data()
+_, y_debug = preprocess_data(df_debug)
+
+st.write(y_debug.value_counts())
+
+
 # ------------------- Helper mappings -------------------
 def air_velocity_from_option(option):
     return {
@@ -284,6 +293,7 @@ st.divider()
 st.caption(
     "Final Year Project | AI-Driven Indoor Thermal Comfort Prediction using Digital Twin Concepts"
 )
+
 
 
 
