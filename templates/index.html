@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Indoor Thermal Comfort Digital Twin</title>
+
+    <!-- ===================== EMBEDDED CSS ===================== -->
+    <style>
+        body {
+            background-color: #f6f7fb;
+            font-family: "Segoe UI", sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 950px;
+            margin: auto;
+            padding: 30px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 5px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #6b7280;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: #ffffff;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            margin-bottom: 30px;
+        }
+
+        .card h2 {
+            margin-bottom: 15px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 18px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
+
+        input[type="number"],
+        select {
+            width: 100%;
+            padding: 8px 10px;
+            border-radius: 6px;
+            border: 1px solid #d1d5db;
+            font-size: 14px;
+        }
+
+        input[type="range"] {
+            width: 100%;
+        }
+
+        input:focus,
+        select:focus {
+            outline: none;
+            border-color: #6366f1;
+        }
+
+        output {
+            display: block;
+            margin-top: 4px;
+            font-size: 13px;
+            color: #374151;
+        }
+
+        .btn {
+            grid-column: 1 / -1;
+            margin-top: 15px;
+            padding: 12px;
+            font-size: 16px;
+            background-color: #6366f1;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .btn:hover {
+            background-color: #4f46e5;
+        }
+
+        .result {
+            text-align: center;
+        }
+
+        .warm {
+            color: #ef4444;
+            font-size: 22px;
+            font-weight: bold;
+        }
+
+        .cold {
+            color: #3b82f6;
+            font-size: 22px;
+            font-weight: bold;
+        }
+
+        .neutral {
+            color: #10b981;
+            font-size: 22px;
+            font-weight: bold;
+        }
+
+        .hint {
+            color: #6b7280;
+            margin-top: 8px;
+        }
+
+        footer {
+            text-align: center;
+            font-size: 13px;
+            color: #9ca3af;
+            margin-top: 40px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>🏢 Indoor Thermal Comfort Digital Twin</h1>
+    <p class="subtitle">
+        AI-based system to simulate and predict occupant thermal comfort
+    </p>
+
+    <div class="card">
+        <h2>⚙️ Indoor Environment Settings</h2>
+
+        <form method="POST" class="form-grid">
+
+            <!-- Air Temperature -->
+            <div>
+                <label>🌡️ Air Temperature (°C)</label>
+                <input type="range" min="1" max="45" step="0.5"
+                       name="ta" value="25"
+                       oninput="this.nextElementSibling.value=this.value">
+                <output>25</output>
+            </div>
+
+            <!-- Humidity -->
+            <div>
+                <label>💧 Relative Humidity</label>
+                <select onchange="setHumidity(this.value)">
+                    <option value="35">Dry</option>
+                    <option value="50" selected>Comfortable</option>
+                    <option value="65">Humid</option>
+                </select>
+                <input type="range" min="20" max="90" step="1"
+                       id="rh" name="rh" value="50"
+                       oninput="this.nextElementSibling.value=this.value">
+                <output>50</output>
+            </div>
+
+            <!-- Air Velocity -->
+            <div>
+                <label>🌬️ Air Velocity</label>
+                <select onchange="setVelocity(this.value)">
+                    <option value="0.1">Still Air (Fan OFF)</option>
+                    <option value="0.25" selected>Fan LOW</option>
+                    <option value="0.45">Fan HIGH</option>
+                </select>
+                <input type="range" min="0.05" max="0.6" step="0.05"
+                       id="v" name="v" value="0.25"
+                       oninput="this.nextElementSibling.value=this.value">
+                <output>0.25</output>
+            </div>
+
+            <!-- Radiant Temperature -->
+            <div>
+                <label>🔥 Radiant Temperature (°C)</label>
+                <input type="range" min="18" max="35" step="0.5"
+                       name="tr" value="25"
+                       oninput="this.nextElementSibling.value=this.value">
+                <output>25</output>
+            </div>
+
+            <!-- Clothing -->
+            <div>
+                <label>🧥 Clothing Insulation</label>
+                <select onchange="setClo(this.value)">
+                    <option value="0.5">Light (T-shirt)</option>
+                    <option value="0.8" selected>Normal (Office Wear)</option>
+                    <option value="1.2">Heavy (Jacket)</option>
+                </select>
+                <input type="range" min="0.3" max="1.5" step="0.1"
+                       id="clo" name="clo" value="0.8"
+                       oninput="this.nextElementSibling.value=this.value">
+                <output>0.8</output>
+            </div>
+
+            <!-- Activity -->
+            <div>
+                <label>🏃 Activity Level</label>
+                <select onchange="setMet(this.value)">
+                    <option value="1.0">Sitting</option>
+                    <option value="1.2" selected>Office Work</option>
+                    <option value="1.6">Walking</option>
+                </select>
+                <input type="range" min="1.0" max="2.5" step="0.1"
+                       id="met" name="met" value="1.2"
+                       oninput="this.nextElementSibling.value=this.value">
+                <output>1.2</output>
+            </div>
+
+            <button type="submit" class="btn">
+                🚀 Run Simulation
+            </button>
+
+        </form>
+    </div>
+
+    {% if prediction %}
+    <div class="card result">
+        <h2>🎯 Digital Twin Prediction</h2>
+
+        {% if prediction == "Warm" %}
+            <p class="warm">🔥 WARM ENVIRONMENT</p>
+            <p class="hint">Recommendation: Improve ventilation or reduce temperature.</p>
+        {% elif prediction == "Cold" %}
+            <p class="cold">❄️ COLD ENVIRONMENT</p>
+            <p class="hint">Recommendation: Increase temperature or reduce airflow.</p>
+        {% else %}
+            <p class="neutral">✅ COMFORTABLE (NEUTRAL)</p>
+            <p class="hint">Thermal conditions are suitable for most occupants.</p>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <footer>
+        Final Year Project | AI-Driven Indoor Thermal Comfort Prediction using Digital Twin Concepts
+    </footer>
+
+</div>
+
+<!-- ===================== EMBEDDED JAVASCRIPT ===================== -->
+<script>
+function setHumidity(val) {
+    document.getElementById("rh").value = val;
+    document.getElementById("rh").nextElementSibling.value = val;
+}
+
+function setVelocity(val) {
+    document.getElementById("v").value = val;
+    document.getElementById("v").nextElementSibling.value = val;
+}
+
+function setClo(val) {
+    document.getElementById("clo").value = val;
+    document.getElementById("clo").nextElementSibling.value = val;
+}
+
+function setMet(val) {
+    document.getElementById("met").value = val;
+    document.getElementById("met").nextElementSibling.value = val;
+}
+</script>
+
+</body>
+</html>
