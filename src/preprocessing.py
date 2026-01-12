@@ -24,11 +24,11 @@ def preprocess_data(df: pd.DataFrame):
     df.dropna(inplace=True)
 
     # Ensure target is numeric
-    df[TARGET_COLUMN] = pd.to_numeric(df[TARGET_COLUMN], errors="coerce")
-    df.dropna(inplace=True)
+    # df[TARGET_COLUMN] = pd.to_numeric(df[TARGET_COLUMN], errors="coerce")
+    # df.dropna(inplace=True)
 
     # Convert to comfort classes
-    df["comfort_class"] = df[TARGET_COLUMN].apply(map_comfort_class)
+    # df["comfort_class"] = df[TARGET_COLUMN].apply(map_comfort_class)
 
     X = df[FEATURE_COLUMNS]
     y = df["comfort_class"]
@@ -43,4 +43,5 @@ def map_comfort_class(value):
         return "Warm"
     else:
         return "Neutral"
+
 
