@@ -11,6 +11,14 @@ from src.data_loader import load_raw_data
 from src.preprocessing import preprocess_data
 from src.model_training import train_models
 
+# ------------------- Model Training (Cached) -------------------
+@st.cache_resource(show_spinner="Training Digital Twin model...")
+def load_and_train_model():
+    df = load_raw_data()
+    X, y = preprocess_data(df)
+    model = train_models(X, y)
+    return model
+
 # ------------------- Helper mappings -------------------
 def air_velocity_from_option(option):
     return {
@@ -66,9 +74,9 @@ from src.data_loader import load_raw_data
 from src.preprocessing import preprocess_data
 from src.model_training import train_models
 
-df = load_raw_data()
-X, y = preprocess_data(df)
-model = train_models(X, y)
+# df = load_raw_data()
+# X, y = preprocess_data(df)
+# model = train_models(X, y)
 
 
 
@@ -84,6 +92,9 @@ st.markdown(
 )
 
 st.divider()
+
+model = load_and_train_model()
+
 
 # ------------------- SIDEBAR -------------------
 st.sidebar.title("⚙️ Environment Settings")
@@ -273,6 +284,7 @@ st.divider()
 st.caption(
     "Final Year Project | AI-Driven Indoor Thermal Comfort Prediction using Digital Twin Concepts"
 )
+
 
 
 
