@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-import joblib
+# import joblib
 import matplotlib.pyplot as plt
 import os
 from src.data_loader import load_raw_data
@@ -47,15 +47,25 @@ def met_from_option(option):
 # )
 
 # ------------------- Load Model -------------------
-MODEL_PATH = os.path.join("models", "thermal_comfort_model.pkl")
+# MODEL_PATH = os.path.join("models", "thermal_comfort_model.pkl")
 
-if os.path.exists(MODEL_PATH):
-    model = joblib.load(MODEL_PATH)
-else:
-    # Train model dynamically (deployment-safe)
-    df = load_raw_data()
-    X, y = preprocess_data(df)
-    model = train_models(X, y)
+# if os.path.exists(MODEL_PATH):
+#     model = joblib.load(MODEL_PATH)
+# else:
+#     # Train model dynamically (deployment-safe)
+#     df = load_raw_data()
+#     X, y = preprocess_data(df)
+#     model = train_models(X, y)
+
+# ------------------- Load / Train Model -------------------
+from src.data_loader import load_raw_data
+from src.preprocessing import preprocess_data
+from src.model_training import train_models
+
+df = load_raw_data()
+X, y = preprocess_data(df)
+model = train_models(X, y)
+
 
 
 # ------------------- HEADER -------------------
@@ -259,4 +269,5 @@ st.divider()
 st.caption(
     "Final Year Project | AI-Driven Indoor Thermal Comfort Prediction using Digital Twin Concepts"
 )
+
 
