@@ -3,6 +3,9 @@ import pandas as pd
 import joblib
 import matplotlib.pyplot as plt
 import os
+from src.data_loader import load_raw_data
+from src.preprocessing import preprocess_data
+from src.model_training import train_models
 
 # ------------------- Helper mappings -------------------
 def air_velocity_from_option(option):
@@ -34,14 +37,26 @@ def met_from_option(option):
     }[option]
 
 # ------------------- Load Model -------------------
-MODEL_PATH = os.path.join("models", "thermal_comfort_model.pkl")
-model = joblib.load(MODEL_PATH)
+# MODEL_PATH = os.path.join("models", "thermal_comfort_model.pkl")
+# model = joblib.load(MODEL_PATH)
 
-st.set_page_config(
-    page_title="Indoor Thermal Comfort Digital Twin",
-    page_icon="🏢",
-    layout="wide"
-)
+# st.set_page_config(
+#     page_title="Indoor Thermal Comfort Digital Twin",
+#     page_icon="🏢",
+#     layout="wide"
+# )
+
+# ------------------- Load Model -------------------
+MODEL_PATH = os.path.join("models", "thermal_comfort_model.pkl")
+
+if os.path.exists(MODEL_PATH):
+    model = joblib.load(MODEL_PATH)
+else:
+    # Train model dynamically (deployment-safe)
+    df = load_raw_data()
+    X, y = preprocess_data(df)
+    model = train_models(X, y)
+
 
 # ------------------- HEADER -------------------
 st.markdown(
@@ -244,3 +259,4 @@ st.divider()
 st.caption(
     "Final Year Project | AI-Driven Indoor Thermal Comfort Prediction using Digital Twin Concepts"
 )
+
