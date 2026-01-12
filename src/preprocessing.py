@@ -31,7 +31,7 @@ def preprocess_data(df: pd.DataFrame):
     # df["comfort_class"] = df[TARGET_COLUMN].apply(map_comfort_class)
 
     X = df[FEATURE_COLUMNS]
-    y = df["comfort_class"]
+    y = df[TARGET_COLUMN]
 
     return X, y
 
@@ -43,5 +43,6 @@ def map_comfort_class(value):
         return "Warm"
     else:
         return "Neutral"
+
 
 
