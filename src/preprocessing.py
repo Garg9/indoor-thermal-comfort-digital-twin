@@ -9,7 +9,7 @@ FEATURE_COLUMNS = [
     "Met"
 ]
 
-TARGET_COLUMN = "Thermal sensation"
+TARGET_COLUMN = "Thermal comfort"
 
 
 def preprocess_data(df: pd.DataFrame):
@@ -43,3 +43,4 @@ def map_comfort_class(value):
         return "Warm"
     else:
         return "Neutral"
+
