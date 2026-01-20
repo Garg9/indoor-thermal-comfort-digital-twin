@@ -1,7 +1,9 @@
 import pandas as pd
 import joblib
+import os
 
-MODEL_PATH = "models/thermal_comfort_model.pkl"
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+MODEL_PATH = os.path.join(BASE_DIR, "models", "thermal_comfort_model.pkl")
 
 FEATURE_COLUMNS = [
     "Air temperature (C)",
@@ -12,29 +14,15 @@ FEATURE_COLUMNS = [
     "Met"
 ]
 
-
 class ThermalComfortDigitalTwin:
-    """
-    Digital Twin for indoor thermal comfort simulation.
-    """
-
     def __init__(self):
-        self.model = joblib.load(MODEL_PATH)
+        self.model = None
+
+    def load_model(self):
+        if self.model is None:
+            self.model = joblib.load(MODEL_PATH)
 
     def predict(self, inputs: dict):
-        """
-        Predict comfort class for given indoor conditions.
-        """
+        self.load_model()
         df = pd.DataFrame([inputs], columns=FEATURE_COLUMNS)
-        prediction = self.model.predict(df)[0]
-        return prediction
-
-    def run_scenario(self, base_conditions: dict, changes: dict):
-        """
-        Simulate a scenario by modifying base conditions.
-        """
-        scenario = base_conditions.copy()
-        scenario.update(changes)
-
-        comfort = self.predict(scenario)
-        return scenario, comfort
+        return self.model.predict(df)[0]
