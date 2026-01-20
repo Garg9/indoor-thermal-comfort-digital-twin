@@ -48,10 +48,22 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MODEL_PATH = os.path.join(BASE_DIR, "models", "thermal_comfort_model.pkl")
 
 @st.cache_resource
-def load_model():
-    return joblib.load(MODEL_PATH)
+def get_model():
+    if os.path.exists(MODEL_PATH):
+        return joblib.load(MODEL_PATH)
 
-model = load_model()
+    # Train once on cloud
+    from src.data_loader import load_raw_data
+    from src.preprocessing import preprocess_data
+    from src.model_training import train_models
+
+    df = load_raw_data()
+    X, y = preprocess_data(df)
+    model = train_models(X, y)
+    return model
+
+model = get_model()
+
 
 
 st.set_page_config(
