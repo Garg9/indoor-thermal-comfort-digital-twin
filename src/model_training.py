@@ -4,6 +4,9 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, classification_report
 import joblib
 import os
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
+
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MODEL_DIR = os.path.join(BASE_DIR, "models")
@@ -25,11 +28,18 @@ def train_models(X, y):
     )
 
     models = {
-        "Logistic Regression": LogisticRegression(max_iter=1000),
+        "Logistic Regression": Pipeline([
+            ("scaler", StandardScaler()),
+            ("clf", LogisticRegression(
+                max_iter=1000,
+                class_weight="balanced"
+            ))
+        ]),
         "Random Forest": RandomForestClassifier(
-            n_estimators=200,
-            random_state=42,
-            n_jobs=-1
+            n_estimators=300,
+            random_state=42,\
+            n_jobs=-1,
+            class_weight="balanced"
         )
     }
 
@@ -58,3 +68,4 @@ def train_models(X, y):
     print(f"\nBest model saved at: {MODEL_PATH}")
 
     return best_model
+
