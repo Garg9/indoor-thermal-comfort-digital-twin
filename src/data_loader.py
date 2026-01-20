@@ -1,7 +1,8 @@
 import pandas as pd
 import os
 
-DATA_PATH = os.path.join("data", "sample_ashrae.csv")
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DATA_PATH = os.path.join(BASE_DIR, "data", "sample_ashrae.csv")
 
 def load_raw_data():
     return pd.read_csv(DATA_PATH)
