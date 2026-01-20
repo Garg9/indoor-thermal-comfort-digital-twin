@@ -42,15 +42,15 @@ from src.data_loader import load_raw_data
 from src.preprocessing import preprocess_data
 from src.model_training import train_models
 
-MODEL_PATH = os.path.join("models", "thermal_comfort_model.pkl")
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+MODEL_PATH = os.path.join(BASE_DIR, "models", "thermal_comfort_model.pkl")
 
-if os.path.exists(MODEL_PATH):
-    model = joblib.load(MODEL_PATH)
-else:
-    # Train model dynamically (for deployment)
-    df = load_raw_data()
-    X, y = preprocess_data(df)
-    model = train_models(X, y)
+@st.cache_resource
+def load_model():
+    return joblib.load(MODEL_PATH)
+
+model = load_model()
+
 
 st.set_page_config(
     page_title="Indoor Thermal Comfort Digital Twin",
@@ -259,3 +259,4 @@ st.divider()
 st.caption(
     "Final Year Project | AI-Driven Indoor Thermal Comfort Prediction using Digital Twin Concepts"
 )
+
