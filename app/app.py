@@ -8,7 +8,7 @@ import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
 
-# ------------------- Helper mappings -------------------
+# --------------------- Helper mappings ---------------------
 def air_velocity_from_option(option):
     return {
         "Still Air (Fan OFF)": 0.1,
