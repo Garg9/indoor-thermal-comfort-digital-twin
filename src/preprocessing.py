@@ -1,4 +1,5 @@
 import pandas as pd
+# import numpy as np
 
 FEATURE_COLUMNS = [
     "Air temperature (C)",
@@ -16,3 +17,4 @@ def preprocess_data(df: pd.DataFrame):
     X = df[FEATURE_COLUMNS]
     y = df[TARGET_COLUMN]
     return X, y
+
