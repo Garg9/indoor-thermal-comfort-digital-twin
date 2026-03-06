@@ -1,4 +1,3 @@
-
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
@@ -69,4 +68,5 @@ def train_models(X, y):
     print(f"\nBest model saved at: {MODEL_PATH}")
 
     return best_model
+
 
