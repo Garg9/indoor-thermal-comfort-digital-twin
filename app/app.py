@@ -1,11 +1,4 @@
 
-# import streamlit as st
-# import pandas as pd
-# import joblib
-# import matplotlib.pyplot as plt
-# import os
-# import sys
-# sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
 
 import streamlit as st
