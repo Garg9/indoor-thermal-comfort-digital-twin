@@ -1,7 +1,7 @@
 from src.data_loader import load_raw_data
 from src.preprocessing import preprocess_data
 from src.model_training import train_models
-# from src.preprocessing impoprt preprocess_data
+
 
 
 def main():
