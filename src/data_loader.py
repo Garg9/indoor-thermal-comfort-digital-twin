@@ -1,10 +1,39 @@
 
 import pandas as pd
-import os
+from pathlib import Path
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DATA_PATH = os.path.join(BASE_DIR, "data", "sample_ashrae.csv")
+DATA_PATH = Path("data/sample_ashrae.csv")
 
 def load_raw_data():
-    return pd.read_csv(DATA_PATH)
+    """Load the raw ASHRAE thermal comfort dataset."""
+    if not DATA_PATH.exists():
+        raise FileNotFoundError(
+            "Dataset not found. Please place ashrae_db.01.csv in data/raw/"
+        )
+    
+    df = pd.read_csv(DATA_PATH, low_memory=False) # low_memory=False often helps with large CSVs
+    return df
 
+# 1. Load the data into a variable named 'df'
+df = load_raw_data()
+print(f"Successfully imported dataset from: {DATA_PATH}\n")
+
+# --- DATA INSPECTION ---
+
+# Check Shape (Rows, Columns)
+print(f"Shape of dataset: {df.shape}")
+
+# Check Size (Total number of elements: rows * columns)
+print(f"Total size: {df.size}")
+
+# Check for Null values (Sums the missing values per column)
+print("\nMissing values per column:")
+print(df.isnull().sum())
+
+# Statistical Summary
+print("\nStatistical Description:")
+print(df.describe())
+
+# Preview the first 5 rows
+print("\nFirst 5 rows:")
+print(df.head())
