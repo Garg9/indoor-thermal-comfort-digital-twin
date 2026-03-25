@@ -3,7 +3,6 @@ from src.preprocessing import preprocess_data
 from src.model_training import train_models
 
 
-
 def main():
     print("Loading dataset...")
     df = load_raw_data()
@@ -19,4 +18,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
