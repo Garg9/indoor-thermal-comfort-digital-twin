@@ -47,7 +47,6 @@ indoor-thermal-comfort-digital-twin/
 │   ├── eda.py              # Exploratory Data Analysis
 │   ├── model_training.py   # Model training & evaluation
 │   └── simulation_engine.py# Digital Twin simulation logic
-├── tests/                  # Unit tests for core modules
 ├── requirements.txt        # Project dependencies
 └── README.md               # Project documentation
 ```
@@ -147,5 +146,4 @@ Contributions are welcome! Please follow these steps:
 Distributed under the MIT License. See `LICENSE` for more information.
 
 ---
-**Maintained by [Your Name/Org]**
-*Contact: [email@example.com]*
+**Maintained by [Aryan Garg]**
