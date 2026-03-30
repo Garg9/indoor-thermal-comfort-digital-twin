@@ -580,3 +580,710 @@
 
 # elif st.session_state.page == "app":
 #     show_main_app()
+
+
+
+
+import streamlit as st
+import pandas as pd
+import joblib
+import matplotlib.pyplot as plt
+import plotly.graph_objects as go
+import os
+import base64
+import sys
+
+st.set_page_config(
+    page_title="Indoor Thermal Comfort Digital Twin",
+    page_icon="🏢",
+    layout="wide"
+)
+
+# ------------------- CUSTOM CSS -------------------
+st.markdown("""
+<style>
+    /* Google Fonts */
+    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+    
+    html, body, [class*="css"] {
+        font-family: 'Outfit', sans-serif;
+    }
+    
+    /* Main container background with animated gradient */
+    @keyframes gradientBG {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+
+    .stApp {
+        background: linear-gradient(-45deg, #0f172a, #1e293b, #0c1a30, #162444);
+        background-size: 400% 400%;
+        animation: gradientBG 15s ease infinite;
+        color: #f8fafc;
+    }
+
+    /* Sidebar Styling */
+    [data-testid="stSidebar"] {
+        background-color: rgba(15, 23, 42, 0.8) !important;
+        backdrop-filter: blur(10px);
+        border-right: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    [data-testid="stSidebar"] * {
+        color: #f8fafc !important;
+    }
+
+    /* Glassmorphism Cards */
+    .glass-card {
+        background: rgba(15, 23, 42, 0.4);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 16px;
+        padding: 30px;
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+        margin-bottom: 24px;
+        transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s ease;
+    }
+    .glass-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 45px 0 rgba(0, 0, 0, 0.5);
+        border-color: rgba(255, 255, 255, 0.2);
+    }
+    
+    .gauge-card {
+        background: rgba(15, 23, 42, 0.4);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 16px;
+        padding: 15px 10px;
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+        margin-bottom: 10px;
+        text-align: center;
+    }
+
+    /* Buttons - Glow and Pulse */
+    @keyframes pulse-glow {
+        0% { box-shadow: 0 0 0 0 rgba(124, 58, 237, 0.4); }
+        70% { box-shadow: 0 0 0 10px rgba(124, 58, 237, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(124, 58, 237, 0); }
+    }
+
+    div.stButton > button {
+        background: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
+        background-size: 200% auto;
+        color: white;
+        border: none;
+        border-radius: 12px;
+        padding: 0.6rem 2rem;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        text-transform: uppercase;
+        animation: pulse-glow 2s infinite;
+    }
+    div.stButton > button:hover {
+        background-position: right center;
+        transform: translateY(-3px) scale(1.02);
+        box-shadow: 0 10px 25px rgba(168, 85, 247, 0.5);
+    }
+
+    /* Headers and Dividers */
+    h1 {
+        font-weight: 800 !important;
+        background: -webkit-linear-gradient(45deg, #38bdf8, #818cf8, #c084fc);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        letter-spacing: -0.5px;
+        margin-bottom: 0.5rem !important;
+    }
+    
+    h2, h3 {
+        color: #f1f5f9 !important;
+        font-weight: 600 !important;
+        letter-spacing: -0.5px;
+    }
+    hr {
+        border-color: rgba(255, 255, 255, 0.1) !important;
+        margin: 2rem 0 !important;
+    }
+
+    /* Prediction Badges - Advanced */
+    @keyframes slideUpFade {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .badge-base {
+        padding: 16px 24px;
+        border-radius: 16px;
+        font-size: 1.4rem;
+        font-weight: 800;
+        text-align: center;
+        margin-bottom: 24px;
+        animation: slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        border: 1px solid rgba(255,255,255,0.2);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    
+    .badge-cold {
+        background: linear-gradient(135deg, rgba(14, 165, 233, 0.8), rgba(59, 130, 246, 0.9));
+        box-shadow: 0 8px 32px rgba(59, 130, 246, 0.5);
+        color: #ffffff;
+    }
+    .badge-warm {
+        background: linear-gradient(135deg, rgba(249, 115, 22, 0.8), rgba(239, 68, 68, 0.9));
+        box-shadow: 0 8px 32px rgba(239, 68, 68, 0.5);
+        color: #ffffff;
+    }
+    .badge-neutral {
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.8), rgba(5, 150, 105, 0.9));
+        box-shadow: 0 8px 32px rgba(16, 185, 129, 0.5);
+        color: #ffffff;
+    }
+    
+    /* Metrics Override */
+    [data-testid="stMetricValue"] {
+        color: #c084fc !important;
+        font-size: 2rem !important;
+        font-weight: 700 !important;
+    }
+    [data-testid="stMetricLabel"] {
+        color: #94a3b8 !important;
+        font-size: 1rem !important;
+        font-weight: 500 !important;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    /* Slider Customization */
+    .stSlider > div > div > div > div {
+        background-color: #818cf8 !important;
+    }
+    .stSlider > div > div > div > div[role="slider"] {
+        background-color: #c084fc !important;
+        box-shadow: 0 0 10px rgba(192, 132, 252, 0.8) !important;
+    }
+    
+    /* Expander Styling */
+    .streamlit-expanderHeader {
+        background: rgba(255, 255, 255, 0.03) !important;
+        border-radius: 8px !important;
+        font-weight: 600 !important;
+        color: #c084fc !important;
+    }
+    /* Animations */
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .fade-in {
+        animation: fadeIn 1s ease-out forwards;
+    }
+
+    /* Background Image Wrapper - REMOVED for dynamic implementation */
+
+    /* Hero Section Styling */
+    .hero-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 60px 40px;
+        background: rgba(15, 23, 42, 0.4);
+        border-radius: 24px;
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        margin-top: 5vh;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    }
+
+    .hero-title {
+        font-size: 3.5rem !important;
+        line-height: 1.1 !important;
+        margin-bottom: 20px !important;
+        background: linear-gradient(135deg, #60a5fa 0%, #c084fc 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        font-weight: 800 !important;
+    }
+
+    .hero-subtitle {
+        font-size: 1.4rem !important;
+        color: #94a3b8 !important;
+        max-width: 800px;
+        margin-bottom: 40px !important;
+        line-height: 1.6 !important;
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+        width: 10px;
+    }
+    ::-webkit-scrollbar-track {
+        background: #0f172a;
+    }
+    ::-webkit-scrollbar-thumb {
+        background: #334155;
+        border-radius: 5px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+        background: #475569;
+    }
+</style>
+""", unsafe_allow_html=True)
+
+# -------- Page Navigation --------
+if "page" not in st.session_state:
+    st.session_state.page = "home"
+
+
+# ------------------- Visualization Helpers -------------------
+def create_gauge_chart(value, title, min_val, max_val, unit, colorscale, comfort_range=None):
+    steps = [
+        {'range': [min_val, (min_val+max_val)/3], 'color': colorscale[0]},
+        {'range': [(min_val+max_val)/3, 2*(min_val+max_val)/3], 'color': colorscale[1]},
+        {'range': [2*(min_val+max_val)/3, max_val], 'color': colorscale[2]}
+    ]
+    
+    threshold = {}
+    if comfort_range:
+        threshold = {
+            'line': {'color': "#10b981", 'width': 4},
+            'thickness': 0.75,
+            'value': comfort_range[1]
+        }
+
+    fig = go.Figure(go.Indicator(
+        mode = "gauge+number",
+        value = value,
+        number = {'suffix': unit, 'font': {'size': 28, 'color': 'white', 'family': 'Outfit'}},
+        gauge = {
+            'axis': {'range': [min_val, max_val], 'tickwidth': 1, 'tickcolor': "#94a3b8"},
+            'bar': {'color': "#6366f1", 'thickness': 0.25},
+            'bgcolor': "rgba(30, 41, 59, 0.5)",
+            'borderwidth': 1,
+            'bordercolor': "rgba(255, 255, 255, 0.1)",
+            'steps': steps,
+            'threshold': threshold
+        }
+    ))
+    
+    # Add comfort zone highlight if provided
+    if comfort_range:
+        fig.add_shape(
+            type="rect",
+            x0=0.15, y0=0.15, x1=0.85, y1=0.25, # Rough approximation for gauge base
+            line=dict(color="rgba(16, 185, 129, 0.3)", width=0),
+            fillcolor="rgba(16, 185, 129, 0.1)",
+        )
+
+    fig.update_layout(
+        height=180, 
+        margin=dict(l=15, r=15, t=10, b=10),
+        paper_bgcolor='rgba(0,0,0,0)',
+        font={'color': "white", 'family': "Outfit"}
+    )
+    return fig
+
+def create_confidence_bar(probabilities, classes):
+    # Sort by probability for a cleaner look
+    data = sorted(zip(classes, probabilities), key=lambda x: x[1])
+    sorted_classes = [x[0] for x in data]
+    sorted_probs = [x[1] for x in data]
+
+    fig = go.Figure(go.Bar(
+        x=sorted_probs,
+        y=sorted_classes,
+        orientation='h',
+        marker=dict(
+            color=['rgba(59, 130, 246, 0.6)' if c == 'Cold' else 'rgba(16, 185, 129, 0.6)' if c == 'Neutral' else 'rgba(239, 68, 68, 0.6)' for c in sorted_classes],
+            line=dict(color='white', width=1)
+        ),
+        text=[f"{p*100:.1f}%" for p in sorted_probs],
+        textposition='outside',
+        textfont=dict(color='white', size=14)
+    ))
+    
+    fig.update_layout(
+        height=220,
+        margin=dict(l=10, r=40, t=10, b=10),
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
+        xaxis=dict(
+            showgrid=False, 
+            showticklabels=False, 
+            range=[0, max(sorted_probs) * 1.2] # Leave space for text
+        ),
+        yaxis=dict(
+            showgrid=False,
+            tickfont=dict(size=16, color='white')
+        ),
+        font=dict(family="Outfit")
+    )
+    return fig
+
+
+# ------------------- Helper mappings -------------------
+def get_base64_image(image_path):
+    with open(image_path, "rb") as img_file:
+        return base64.b64encode(img_file.read()).decode()
+
+def add_bg_from_local(image_path):
+    if os.path.exists(image_path):
+        bin_str = get_base64_image(image_path)
+        page_bg_img = f'''
+        <style>
+        .stApp {{
+            background-image: linear-gradient(rgba(15, 23, 42, 0.6), rgba(15, 23, 42, 0.6)), url("data:image/png;base64,{bin_str}");
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }}
+        </style>
+        '''
+        st.markdown(page_bg_img, unsafe_allow_html=True)
+
+def air_velocity_from_option(option):
+    return {
+        "Still Air (Fan OFF)": 0.1,
+        "Fan LOW": 0.25,
+        "Fan HIGH": 0.45
+    }[option]
+
+def humidity_from_option(option):
+    return {
+        "Dry": 35.0,
+        "Comfortable": 50.0,
+        "Humid": 65.0
+    }[option]
+
+def clo_from_option(option):
+    return {
+        "Light (T-shirt)": 0.5,
+        "Normal (Office Wear)": 0.8,
+        "Heavy (Jacket)": 1.2
+    }[option]
+
+def met_from_option(option):
+    return {
+        "Sitting": 1.0,
+        "Office Work": 1.2,
+        "Walking": 1.6
+    }[option]
+
+
+# suggestion 
+# ------------------- Dynamic Comfort Suggestions -------------------
+def get_dynamic_comfort_suggestions(prediction, ta, rh, v, clo, met):
+    suggestions = []
+
+    TEMP_HIGH = 28
+    TEMP_LOW = 20
+
+    HUMID_HIGH = 60
+    AIR_LOW = 0.15
+    AIR_HIGH = 0.35
+
+    CLO_HIGH = 1.0
+    CLO_LOW = 0.6
+
+    MET_HIGH = 1.4
+    MET_LOW = 1.1
+
+    if prediction == "Warm":
+        if ta > TEMP_HIGH:
+            suggestions.append(f"Reduce air temperature (currently {ta}°C).")
+        if rh > HUMID_HIGH:
+            suggestions.append(f"High humidity ({rh}%) — use ventilation or dehumidifier.")
+        if v < AIR_LOW:
+            suggestions.append(f"Low air movement ({v} m/s) — increase fan speed.")
+        if clo > CLO_HIGH:
+            suggestions.append(f"Heavy clothing (clo={clo}) — wear lighter clothes.")
+        if met > MET_HIGH:
+            suggestions.append(f"High activity (met={met}) — reduce activity level.")
+
+    elif prediction == "Cold":
+        if ta < TEMP_LOW:
+            suggestions.append(f"Increase air temperature (currently {ta}°C).")
+        if v > AIR_HIGH:
+            suggestions.append(f"High airflow ({v} m/s) — reduce fan speed.")
+        if clo < CLO_LOW:
+            suggestions.append(f"Light clothing (clo={clo}) — wear warmer clothes.")
+        if met < MET_LOW:
+            suggestions.append(f"Low activity (met={met}) — slight movement helps warmth.")
+
+    else:
+        suggestions.append("Indoor conditions are comfortable.")
+        suggestions.append("Maintain current environment settings.")
+
+    if not suggestions:
+        suggestions.append("Minor adjustments may further improve comfort.")
+
+    return suggestions
+
+
+# ------------------- Load Model -------------------
+import os
+import sys
+
+# Add the parent directory to Python path so `src` module can be found when Streamlit runs inside `app/`
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+from src.data_loader import load_raw_data
+from src.preprocessing import preprocess_data
+from src.model_training import train_models
+
+MODEL_PATH = os.path.join("models", "thermal_comfort_model.pkl")
+
+if os.path.exists(MODEL_PATH):
+    model = joblib.load(MODEL_PATH)
+else:
+    # Train model dynamically (for deployment)
+    try:
+        df_raw = load_raw_data()
+        X, y = preprocess_data(df_raw)
+        model = train_models(X, y)
+    except Exception as e:
+        st.error("⚠️ Model Training Failed!")
+        st.error(f"Error: {e}")
+        
+        # Diagnostic information
+        try:
+            st.write("### 🔍 Data Diagnostic")
+            df_raw = load_raw_data()
+            X, y = preprocess_data(df_raw)
+            st.write("Comfort Class Distribution:")
+            st.write(pd.Series(y).value_counts())
+            
+            st.info("""
+            **Why is this happening?**
+            This error usually occurs when the model file is not found (e.g., too large for GitHub) and the alternative 
+            data source (`sample_ashrae.csv`) doesn't have enough variety for training.
+            
+            **How to fix:**
+            1. Ensure `data/sample_ashrae.csv` contains multiple comfort classes (Cold, Neutral, Warm).
+            2. Run `create_sample_dataset.py` locally to generate a balanced sample and push it to GitHub.
+            """)
+        except Exception as diag_e:
+            st.error(f"Failed to load diagnostic data: {diag_e}")
+        
+        st.stop()
+
+
+# ------------------- HOME / INDEX PAGE -------------------
+def show_home_page():
+    # Dynamic Full Page Background
+    image_path = os.path.join("app", "assets", "smart_office_bg.png")
+    if not os.path.exists(image_path):
+        image_path = os.path.join("assets", "smart_office_bg.png")
+    
+    add_bg_from_local(image_path)
+
+    # Hero Image and Content
+    st.markdown('<div class="fade-in">', unsafe_allow_html=True)
+    
+    col1, col2, col3 = st.columns([0.1, 0.8, 0.1])
+    
+    with col2:
+        st.markdown(
+            """
+            <div class="hero-container">
+                <h1 class="hero-title">Indoor Thermal Comfort <br/> Digital Twin</h1>
+                <p class="hero-subtitle">
+                    Experience the future of smart building environments. Our AI-driven Digital Twin 
+                    simulates complex indoor conditions to predict and optimize human thermal comfort 
+                    with precision and intelligence.
+                </p>
+            </div>
+            """, 
+            unsafe_allow_html=True
+        )
+        
+        st.markdown("<br/>", unsafe_allow_html=True)
+        
+        # Action Buttons in a nice row
+        btn_col1, btn_col2, btn_col3 = st.columns([1, 1, 1])
+        
+        with btn_col2:
+            if st.button("🚀 Start Simulation", use_container_width=True):
+                st.session_state.page = "app"
+                st.rerun()
+
+    st.markdown('</div>', unsafe_allow_html=True)
+    
+    st.markdown("<br/><br/>", unsafe_allow_html=True)
+    
+    # Simple feature cards instead of long lists
+    f1, f2, f3 = st.columns(3)
+    with f1:
+        st.markdown("""
+            <div class="glass-card" style="height: 250px;">
+                <h4 style="color: #c084fc;">🤖 AI-Powered</h4>
+                <p style="color: #94a3b8;">Leverages the ASHRAE dataset and advanced ML models to predict comfort levels with high accuracy.</p>
+            </div>
+        """, unsafe_allow_html=True)
+    with f2:
+        st.markdown("""
+            <div class="glass-card" style="height: 250px;">
+                <h4 style="color: #c084fc;">🌪️ Digital Twin</h4>
+                <p style="color: #94a3b8;">Create a virtual replica of any indoor space and test environmental scenarios in real-time.</p>
+            </div>
+        """, unsafe_allow_html=True)
+    with f3:
+        st.markdown("""
+            <div class="glass-card" style="height: 250px;">
+                <h4 style="color: #c084fc;">✨ Suggestions</h4>
+                <p style="color: #94a3b8;">Receive personalized, data-driven recommendations to improve your indoor environment.</p>
+            </div>
+        """, unsafe_allow_html=True)
+
+
+# ------------------- MAIN APPLICATION -------------------
+def show_main_app():
+    # Dynamic Full Page Background (Consistent with Home)
+    image_path = os.path.join("app", "assets", "smart_office_bg.png")
+    if not os.path.exists(image_path):
+        image_path = os.path.join("assets", "smart_office_bg.png")
+    add_bg_from_local(image_path)
+
+    if st.button("⬅ Back to Home"):
+        st.session_state.page = "home"
+        st.rerun()
+
+    # ------------------- SIDEBAR -------------------
+    st.sidebar.markdown(
+        """
+        <div style="background: rgba(124, 58, 237, 0.1); padding: 15px; border-radius: 12px; border: 1px solid rgba(124, 58, 237, 0.2);">
+            <h3 style="margin-top:0; color:#c084fc;">⚙️ Control Hub</h3>
+            <p style="font-size:0.9rem; color:#94a3b8;">Fine-tune your Digital Twin environment in real-time.</p>
+        </div>
+        """, unsafe_allow_html=True
+    )
+
+    ta = st.sidebar.slider(
+        "🌡️ Air Temperature (°C)",
+        min_value=1.0, max_value=45.0, value=25.0,
+        help="Indoor air temperature"
+    )
+
+    humidity_mode = st.sidebar.radio("💧 Humidity Mode", ["Preset", "Manual"], horizontal=True)
+    if humidity_mode == "Preset":
+        rh_opt = st.sidebar.selectbox("Humidity Level", ["Dry", "Comfortable", "Humid"])
+        rh = humidity_from_option(rh_opt)
+    else:
+        rh = st.sidebar.slider("Humidity (%)", 20.0, 90.0, 50.0)
+
+    airflow_mode = st.sidebar.radio("🌬️ Airflow Mode", ["Preset", "Manual"], horizontal=True)
+    if airflow_mode == "Preset":
+        v_opt = st.sidebar.selectbox("Airflow Condition", ["Still Air (Fan OFF)", "Fan LOW", "Fan HIGH"])
+        v = air_velocity_from_option(v_opt)
+    else:
+        v = st.sidebar.slider("Air Velocity (m/s)", 0.05, 0.60, 0.15)
+
+    with st.sidebar.expander("🧥 Personal & Radiant Settings"):
+        clothing_mode = st.radio("Clothing", ["Preset", "Manual"], key="clothing_r")
+        clo = clo_from_option(st.selectbox("Level", ["Light (T-shirt)", "Normal (Office Wear)", "Heavy (Jacket)"])) if clothing_mode == "Preset" else st.slider("Clo", 0.3, 1.5, 0.8)
+        
+        activity_mode = st.radio("Activity", ["Preset", "Manual"], key="activity_r")
+        met = met_from_option(st.selectbox("Level ", ["Sitting", "Office Work", "Walking"])) if activity_mode == "Preset" else st.slider("Met", 1.0, 2.5, 1.2)
+        
+        radiant_mode = st.radio("Radiant Temp", ["Auto", "Manual"], key="radiant_r")
+        tr = ta if radiant_mode == "Auto" else st.slider("Radiant (°C)", 18.0, 35.0, ta)
+
+    # ------------------- REAL-TIME PREDICTION -------------------
+    input_df = pd.DataFrame([{
+        "Air temperature (C)": ta,
+        "Relative humidity (%)": rh,
+        "Air velocity (m/s)": v,
+        "Radiant temperature (C)": tr,
+        "Clo": clo,
+        "Met": met
+    }])
+
+    prediction = model.predict(input_df)[0]
+    probabilities = model.predict_proba(input_df)[0]
+    classes = model.classes_
+    suggestions = get_dynamic_comfort_suggestions(prediction, ta, rh, v, clo, met)
+
+    # ------------------- MAIN CONTENT DASHBOARD -------------------
+    st.markdown("<div class='fade-in'>", unsafe_allow_html=True)
+    
+    # top row: Gauges
+    g1, g2, g3 = st.columns(3)
+    with g1:
+        st.markdown("<div class='gauge-card'>", unsafe_allow_html=True)
+        st.markdown("<h4 style='margin-bottom: 0px; color: #c084fc;'>🌡️ Temperature</h4>", unsafe_allow_html=True)
+        st.plotly_chart(create_gauge_chart(ta, "Temp", 1, 45, "°C", ['#3b82f6', '#10b981', '#ef4444'], comfort_range=[22, 26]), use_container_width=True)
+        st.markdown("</div>", unsafe_allow_html=True)
+    with g2:
+        st.markdown("<div class='gauge-card'>", unsafe_allow_html=True)
+        st.markdown("<h4 style='margin-bottom: 0px; color: #c084fc;'>💧 Humidity</h4>", unsafe_allow_html=True)
+        st.plotly_chart(create_gauge_chart(rh, "Humidity", 20, 90, "%", ['#60a5fa', '#10b981', '#3b82f6'], comfort_range=[40, 60]), use_container_width=True)
+        st.markdown("</div>", unsafe_allow_html=True)
+    with g3:
+        st.markdown("<div class='gauge-card'>", unsafe_allow_html=True)
+        st.markdown("<h4 style='margin-bottom: 0px; color: #c084fc;'>🌬️ Airflow</h4>", unsafe_allow_html=True)
+        st.plotly_chart(create_gauge_chart(v, "Airflow", 0, 0.6, " m/s", ['#94a3b8', '#10b981', '#6366f1'], comfort_range=[0.1, 0.25]), use_container_width=True)
+        st.markdown("</div>", unsafe_allow_html=True)
+
+    # bottom row: Prediction and Analysis
+    col_pred, col_analysis = st.columns([1, 1.2])
+
+    with col_pred:
+        st.markdown("<div class='glass-card'>", unsafe_allow_html=True)
+        st.subheader("🎯 Live Prediction")
+        
+        if prediction == "Cold":
+            st.markdown("<div class='badge-base badge-cold' style='font-size: 1.8rem;'>❄️ Cold</div>", unsafe_allow_html=True)
+        elif prediction == "Warm":
+            st.markdown("<div class='badge-base badge-warm' style='font-size: 1.8rem;'>🔥 Warm</div>", unsafe_allow_html=True)
+        else:
+            st.markdown("<div class='badge-base badge-neutral' style='font-size: 1.8rem;'>✅ Neutral</div>", unsafe_allow_html=True)
+
+        st.markdown("<br/>", unsafe_allow_html=True)
+        st.subheader("📊 Confidence Breakdown")
+        st.plotly_chart(create_confidence_bar(probabilities, classes), use_container_width=True)
+        st.markdown("</div>", unsafe_allow_html=True)
+
+    with col_analysis:
+        st.markdown("<div class='glass-card'>", unsafe_allow_html=True)
+        st.subheader("💡 Optimization Insights")
+        
+        # Display suggestions with icons
+        for s in suggestions:
+            icon = "⚡" if "Reduce" in s or "Increase" in s else "✨" if "Maintain" in s else "🔍"
+            st.markdown(f"""
+                <div style="background: rgba(255,255,255,0.05); padding: 12px; border-radius: 10px; margin-bottom: 10px; border-left: 4px solid #c084fc;">
+                    <strong>{icon}</strong> {s}
+                </div>
+            """, unsafe_allow_html=True)
+
+        with st.expander("📝 Detailed Environmental Context"):
+            st.markdown("#### Physical Parameters")
+            st.write(f"- Ambient Heat: {'High' if ta > 28 else 'Low' if ta < 20 else 'Moderate'}")
+            st.write(f"- Airflow Impact: {'High cooling' if v > 0.3 else 'Stagnant' if v < 0.1 else 'Standard'}")
+            st.write(f"- Body Insulation (Clo): {clo}")
+            st.write(f"- Metabolic Heat (Met): {met}")
+
+        st.markdown("</div>", unsafe_allow_html=True)
+
+    st.markdown("</div>", unsafe_allow_html=True)
+
+    # ------------------- FOOTER -------------------
+    st.divider()
+    st.caption("Final Year Project | AI-Driven Indoor Thermal Comfort Prediction using Digital Twin Concepts")
+
+
+# ------------------- PAGE CONTROLLER -------------------
+if st.session_state.page == "home":
+    show_home_page()
+
+elif st.session_state.page == "app":
+    show_main_app()
