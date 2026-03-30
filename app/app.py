@@ -581,9 +581,6 @@
 # elif st.session_state.page == "app":
 #     show_main_app()
 
-
-
-
 import streamlit as st
 import pandas as pd
 import joblib
@@ -892,45 +889,8 @@ def create_gauge_chart(value, title, min_val, max_val, unit, colorscale, comfort
     )
     return fig
 
-def create_confidence_bar(probabilities, classes):
-    # Sort by probability for a cleaner look
-    data = sorted(zip(classes, probabilities), key=lambda x: x[1])
-    sorted_classes = [x[0] for x in data]
-    sorted_probs = [x[1] for x in data]
 
-    fig = go.Figure(go.Bar(
-        x=sorted_probs,
-        y=sorted_classes,
-        orientation='h',
-        marker=dict(
-            color=['rgba(59, 130, 246, 0.6)' if c == 'Cold' else 'rgba(16, 185, 129, 0.6)' if c == 'Neutral' else 'rgba(239, 68, 68, 0.6)' for c in sorted_classes],
-            line=dict(color='white', width=1)
-        ),
-        text=[f"{p*100:.1f}%" for p in sorted_probs],
-        textposition='outside',
-        textfont=dict(color='white', size=14)
-    ))
-    
-    fig.update_layout(
-        height=220,
-        margin=dict(l=10, r=40, t=10, b=10),
-        paper_bgcolor='rgba(0,0,0,0)',
-        plot_bgcolor='rgba(0,0,0,0)',
-        xaxis=dict(
-            showgrid=False, 
-            showticklabels=False, 
-            range=[0, max(sorted_probs) * 1.2] # Leave space for text
-        ),
-        yaxis=dict(
-            showgrid=False,
-            tickfont=dict(size=16, color='white')
-        ),
-        font=dict(family="Outfit")
-    )
-    return fig
-
-
-# ------------------- Helper mappings -------------------
+ # ------------------- Helper mappings -------------------
 def get_base64_image(image_path):
     with open(image_path, "rb") as img_file:
         return base64.b64encode(img_file.read()).decode()
@@ -1247,9 +1207,6 @@ def show_main_app():
         else:
             st.markdown("<div class='badge-base badge-neutral' style='font-size: 1.8rem;'>✅ Neutral</div>", unsafe_allow_html=True)
 
-        st.markdown("<br/>", unsafe_allow_html=True)
-        st.subheader("📊 Confidence Breakdown")
-        st.plotly_chart(create_confidence_bar(probabilities, classes), use_container_width=True)
         st.markdown("</div>", unsafe_allow_html=True)
 
     with col_analysis:
