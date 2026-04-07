@@ -2,7 +2,7 @@
 
 [![Python Version](https://img.shields.io/badge/python-3.9%2B-blue.svg)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://indoor-thermal-comfort-digital-twin-8fyafypecdefeho6pemiqg.streamlit.app/)
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://indoor-thermal-comfort-digital-twin-mzd6xg7y6jepe7kts8xapf.streamlit.app/)
 
 This project presents an **AI-based Digital Twin system** for predicting **indoor thermal comfort** under varying environmental and occupant conditions. By leveraging the **ASHRAE Global Thermal Comfort Database II**, the system simulates real-world thermal sensations to optimize indoor environments.
 
